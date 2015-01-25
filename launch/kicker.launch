@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+  <arg name="nao_ip" default="$(optenv NAO_IP localhost)" />
+  <arg name="nao_port" default="$(optenv NAO_PORT 9559)" />
+
+  <!-- Node providing position interpolation services. -->
+  <node pkg="nao_kick" type="nao_effector" name="nao_effector"
+        required="true"
+        args="--pip=$(arg nao_ip) --pport=$(arg nao_port)"/>
+
+  <!-- Node providing the kick services. -->
+  <node pkg="nao_kick" type="nao_kick" name="nao_kick"
+        required="true"/>
+
+  <!-- Node providing pose control. -->
+  <node pkg="nao_pose" type="pose_controller.py" name="pose_controller"
+        required="true"/>
+
+</launch>

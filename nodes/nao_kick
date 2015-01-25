@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+import rospy
+from nao_kick.keyframe_executor import KeyframeExecutor
+from nao_kick.srv import Kick
+from nao_kick.kick_keyframe import (kickRightKeyframe, kickLeftKeyframe)
+
+if __name__ == '__main__':
+    # Create node
+    rospy.init_node("nao_kick", log_level=rospy.DEBUG)
+    # Initialize executor, wait for services and action servers.
+    _keyframeExecutor = KeyframeExecutor()
+    # Function for handling service calls
+    def _kickLeft(request):
+        _keyframeExecutor.execute(kickLeftKeyframe)
+        return []
+    def _kickRight(request):
+        _keyframeExecutor.execute(kickRightKeyframe)
+        return []
+    # Create kick services
+    _kickLeftService = rospy.Service("kick_left", Kick, _kickLeft)
+    _kickRightService = rospy.Service("kick_right", Kick, _kickRight)
+    # Ready
+    rospy.spin()
+

@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+
+import rospy
+
+import actionlib
+
+from naoqi_driver.naoqi_node import NaoqiNode
+
+from nao_kick.srv import (SetEffectorPosition, SetEffectorPositionResponse,
+                         SetEffectorPositions, SetEffectorPositionsResponse)
+
+from std_srvs.srv import EmptyResponse
+
+class NaoEffector(NaoqiNode):
+    def __init__(self):
+        NaoqiNode.__init__(self, "nao_effector")
+
+        self.motionProxy = self.get_proxy("ALMotion")
+
+        # store the number of joints in each motion chain and collection,
+        # used for sanity checks
+        self.collectionSize = {}
+
+        for collectionName in ('Head', 'LArm', 'LLeg','RLeg', 'RArm', 'Body',
+                               'BodyJoints', 'BodyActuators'):
+            self.collectionSize[collectionName] =\
+            len(self.motionProxy.getJointNames(collectionName));
+
+        # Cartesian controlled effectors
+        self.cartesianEffectors = ('Head', 'LArm', 'RArm',
+                                   'LLeg', 'RLeg', 'Torso')
+
+
+        # Services for naoqi cartesian controll
+        self.setEffectorPositionService = rospy.Service(
+            "set_effector_position", SetEffectorPosition,
+            self.setEffectorPosition)
+        self.setEffectorPositionsService = rospy.Service(
+            "set_effector_positions", SetEffectorPositions,
+            self.setEffectorPositions)
+
+    def _unpackTwist(self, twist):
+
+        result = []
+        result.append(twist.linear.x)
+        result.append(twist.linear.y)
+        result.append(twist.linear.z)
+        result.append(twist.angular.x)
+        result.append(twist.angular.y)
+        result.append(twist.angular.z)
+
+        return result
+
+    def setEffectorPosition(self, req):
+
+        path = []
+        for twist in req.paths.path:
+            path.append(self._unpackTwist(twist))
+        effector_name = req.effector_name.data
+        space = req.space
+        axisMask = req.axisMask
+        times = list(req.times.times)
+        isAbsolute = req.isAbsolute
+
+        noError = True
+
+        if len(path) != len(times):
+            print "len error"
+            noError = False
+
+        elif not (effector_name in self.cartesianEffectors):
+            print "name error"
+            noError = False
+
+        else:
+            try:
+                self.motionProxy.positionInterpolation(
+                    effector_name, space, path, axisMask,
+                    times, isAbsolute)
+            except RuntimeError, e:
+                rospy.logerr("Exception caught:\n%s", e)
+                noError = False
+
+        return SetEffectorPositionResponse(noError)
+
+    def setEffectorPositions(self, req):
+
+        paths = []
+        for path in req.paths:
+            pathToAppend = []
+            for twist in path.path:
+                pathToAppend.append(self._unpackTwist(twist))
+            paths.append(pathToAppend)
+        effector_names = []
+        for name in req.effector_names:
+            effector_names.append(name.data)
+        space = req.space
+        axisMasks = list(req.axisMasks)
+        times = []
+        for time in req.times:
+            times.append(list(time.times))
+        isAbsolute = req.isAbsolute
+
+        noError = True
+
+        if (len(effector_names) != len(paths) or
+            len(effector_names) != len(times) or
+            len(effector_names) != len(axisMasks)):
+            noError = False
+
+        else:
+            Error = False
+            for i in range(len(effector_names)):
+                if not (effector_names[i] in self.cartesianEffectors):
+                    Error = True
+                    break
+
+                if (isinstance(paths[i], str) and
+                    len(paths[i]) != len(times[i])):
+                    Error = True
+                    break
+            if Error:
+                noError = False
+
+            else:
+                try:
+                    self.motionProxy.positionInterpolations(
+                        effector_names, space, paths, axisMasks,
+                        times, isAbsolute)
+                except RuntimeError, e:
+                    rospy.logerr("Exception caught:\n%s", e)
+                    noError = False
+
+        return SetEffectorPositionsResponse(noError)
+
+
+if __name__ == '__main__':
+
+    NaoEffector()
+    rospy.loginfo("nao_effector running...")
+    rospy.spin()
+
+    rospy.loginfo("nao_effector stopped.")
+    exit(0)

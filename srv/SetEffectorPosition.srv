@@ -1,0 +1,9 @@
+# Set effector position service message:
+std_msgs/String effector_name
+uint16 space
+nao_kick/Path paths
+uint16 axisMask
+nao_kick/Times times
+bool isAbsolute
+---
+bool noError
