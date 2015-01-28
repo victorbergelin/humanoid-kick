@@ -5,7 +5,7 @@
   <arg name="nao_port" default="9559" />
 
   <!-- Position interpolation and kick services -->
-  <include file="$(find nao_kick)/launch/kicker.launch">
+  <include file="$(find nao_kick)/launch/kick_nodes.launch">
     <arg name="nao_ip" value="$(arg nao_ip)"/>
     <arg name="nao_port" value="$(arg nao_port)"/>
   </include>
