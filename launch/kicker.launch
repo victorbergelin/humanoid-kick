@@ -13,8 +13,4 @@
   <node pkg="nao_kick" type="nao_kick" name="nao_kick"
         required="true"/>
 
-  <!-- Node providing pose control. -->
-  <node pkg="nao_pose" type="pose_controller.py" name="pose_controller"
-        required="true"/>
-
 </launch>
