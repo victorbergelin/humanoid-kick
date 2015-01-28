@@ -1,0 +1,13 @@
+- git:
+    local-name: nao_robot
+    uri: git@github.com:ros-naoqi/nao_robot.git
+- git:
+    local-name: naoqi_bridge
+    uri: git@github.com:ros-naoqi/naoqi_bridge.git
+- git:
+    local-name: nao_extras
+    uri: git@github.com:jondy276/nao_extras.git
+    version: feature-add-kicking
+- git:
+    local-name: nao_kick
+    uri: git@github.com:jondy276/nao_kick.git
