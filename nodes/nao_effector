@@ -39,6 +39,8 @@ class NaoEffector(NaoqiNode):
             "set_effector_positions", SetEffectorPositions,
             self.setEffectorPositions)
 
+        rospy.logdebug("NaoEffector initialized.")
+
     def _unpackTwist(self, twist):
 
         result = []
@@ -53,6 +55,8 @@ class NaoEffector(NaoqiNode):
 
     def setEffectorPosition(self, req):
 
+        rospy.logdebug("setEffectorPosition called")
+
         path = []
         for twist in req.paths.path:
             path.append(self._unpackTwist(twist))
@@ -65,25 +69,31 @@ class NaoEffector(NaoqiNode):
         noError = True
 
         if len(path) != len(times):
-            print "len error"
+            rospy.logerror("Length of path does not match times.")
             noError = False
 
         elif not (effector_name in self.cartesianEffectors):
-            print "name error"
+            rospy.logerror("Unknown effector name")
             noError = False
 
         else:
             try:
+                rospy.logdebug("Starting position interpolation.")
                 self.motionProxy.positionInterpolation(
                     effector_name, space, path, axisMask,
                     times, isAbsolute)
+                rospy.logdebug("Done with position interpolation.")
             except RuntimeError, e:
                 rospy.logerr("Exception caught:\n%s", e)
                 noError = False
 
+        rospy.logdebug("Error during setEffectorPosition: " + str(not noError))
+
         return SetEffectorPositionResponse(noError)
 
     def setEffectorPositions(self, req):
+
+        rospy.logdebug("setEffectorPositions called")
 
         paths = []
         for path in req.paths:
@@ -106,17 +116,20 @@ class NaoEffector(NaoqiNode):
         if (len(effector_names) != len(paths) or
             len(effector_names) != len(times) or
             len(effector_names) != len(axisMasks)):
+            rospy.logerror("Number of effector names does not match length of paths, times or masks.")
             noError = False
 
         else:
             Error = False
             for i in range(len(effector_names)):
                 if not (effector_names[i] in self.cartesianEffectors):
+                    rospy.logerror("Unknown effector name " + str(effector_names[i]))
                     Error = True
                     break
 
                 if (isinstance(paths[i], str) and
                     len(paths[i]) != len(times[i])):
+                    rospy.logerror("Path is not str, or length of string does not match times.")
                     Error = True
                     break
             if Error:
@@ -124,12 +137,16 @@ class NaoEffector(NaoqiNode):
 
             else:
                 try:
+                    rospy.logdebug("Starting position interpolation.")
                     self.motionProxy.positionInterpolations(
                         effector_names, space, paths, axisMasks,
                         times, isAbsolute)
+                    rospy.logdebug("Done position interpolation.")
                 except RuntimeError, e:
                     rospy.logerr("Exception caught:\n%s", e)
                     noError = False
+
+        rospy.logdebug("Error during setEffectorPositions: " + str(not noError))
 
         return SetEffectorPositionsResponse(noError)
 
