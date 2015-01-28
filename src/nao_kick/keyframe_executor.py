@@ -126,29 +126,36 @@ class KeyframeExecutor(object):
 
     def _angleInterpolation(self, frame):
 
+        rospy.logdebug("Waiting for joint_trajectory server.")
         self._client.wait_for_server()
         self._goal = self._packJointTrajectoryGoal(
             frame["names"], frame["angles"], frame["time"], frame["isAbsolute"])
         self._client.send_goal(self._goal)
+        rospy.logdebug("Waiting for joint_trajectory result.")
         self._client.wait_for_result()
+        rospy.logdebug("Done waiting for joint_trajectory result.")
 
     def _setEffectorPosition(self, frame):
 
+        rospy.logdebug("Setting effector position.")
         self._setEffectorPositionProxy(String(frame['effector']),
                                        frame['space'],
                                        self._packPath(frame['path']),
                                        frame['axisMask'],
                                        Times(frame['time']),
                                        frame["isAbsolute"])
+        rospy.logdebug("Done setting effector position.")
 
     def _setEffectorPositions(self, frame):
 
+        rospy.logdebug("Setting effector positions.")
         self._setEffectorPositionsProxy(self._packEffectors(frame['effectors']),
                                         frame['space'],
                                         self._packPaths(frame['paths']),
                                         frame['axisMasks'],
                                         self._packTimes(frame['times']),
                                         frame["isAbsolute"])
+        rospy.logdebug("Done setting effector positions.")
 
     def _posture(self, frame):
 
@@ -156,8 +163,9 @@ class KeyframeExecutor(object):
         self._postureClient.wait_for_server()
         self._postureClient.send_goal(
             BodyPoseWithSpeedGoal(frame["posture"], frame["speed"]))
-        rospy.logdebug("Wait for result on body_pose_naoqi")
+        rospy.logdebug("Waiting for body_pose_naoqi result")
         self._postureClient.wait_for_result()
+        rospy.logdebug("Done waiting for body_pose_naoqi result")
 
     def _wait(self, frame):
         time.sleep(frame["time"])
@@ -167,7 +175,9 @@ class KeyframeExecutor(object):
         Executes the given keyframe
         """
 
+        rospy.logdebug("Executing keyframe.")
         for trial in range(keyframe["repeat"]):
             for frame in keyframe["frames"]:
                 self._functionLookUp[frame["function"]](frame)
             time.sleep(keyframe["paus"])
+
