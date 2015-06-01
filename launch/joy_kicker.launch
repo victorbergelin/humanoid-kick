@@ -3,6 +3,7 @@
 <launch>
   <arg name="nao_ip"/>
   <arg name="nao_port" default="9559" />
+  <arg name="nao_body_version" default="V50"/>
 
   <!-- Position interpolation and kick services -->
   <include file="$(find nao_kick)/launch/kick_nodes.launch">
@@ -10,16 +11,27 @@
     <arg name="nao_port" value="$(arg nao_port)"/>
   </include>
 
-  <!-- Nodes used to interface with the robot -->
-  <include file="$(find nao_bringup)/launch/nao.launch">
-    <arg name="nao_ip" value="$(arg nao_ip)"/>
-    <arg name="nao_port" value="$(arg nao_port)"/>
+  <!-- upload nao robot model V40 by default-->
+  <include file="$(find nao_description)/launch/robot_state_publisher.launch" >
+    <arg name="version" value="$(arg nao_body_version)" />
   </include>
 
-  <!-- Node used to control walking -->
-  <include file="$(find nao_apps)/launch/nao_walker.launch">
-    <arg name="nao_ip" value="$(arg nao_ip)"/>
-    <arg name="nao_port" value="$(arg nao_port)"/>
+  <!-- publish joint states and basic actuators -->
+  <include file="$(find naoqi_driver)/launch/naoqi_driver.launch">
+    <arg name="nao_ip" value="$(arg nao_ip)" />
+    <arg name="nao_port" value="$(arg nao_port)" />
+  </include>
+
+  <!-- launch pose manager -->
+  <include file="$(find nao_pose)/launch/pose_manager.launch" >
+    <arg name="nao_ip" value="$(arg nao_ip)" />
+    <arg name="nao_port" value="$(arg nao_port)" />
+  </include>
+
+  <!-- enable walker -->
+  <include file="$(find nao_apps)/launch/walker.launch">
+    <arg name="nao_ip" value="$(arg nao_ip)" />
+    <arg name="nao_port" value="$(arg nao_port)" />
   </include>
 
   <!-- Nodes used for gamepad control -->
